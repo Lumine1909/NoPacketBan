@@ -21,7 +21,7 @@ public class SafeDecoder<T extends PacketListener> extends PacketDecoder<T> {
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
         try {
             super.channelRead(ctx, msg);
         } catch (Throwable t) {

@@ -28,7 +28,7 @@ public class PlayerListener implements Listener {
     @SuppressWarnings({"rawtypes", "unchecked"})
     private void injectPlayer(Player player) {
         Channel channel = ((CraftPlayer) player).getHandle().connection.connection.channel;
-        replaceHandler(channel, "encoder", encoder -> new SafeEncoder(player, (PacketEncoder) encoder));
+        replaceHandler(channel, "encoder", encoder -> new SafeEncoder<>(player, (PacketEncoder) encoder));
         replaceHandler(channel, "decoder", decoder -> new SafeDecoder<>(player, (PacketDecoder) decoder));
         replaceHandler(channel, "prepender", prepender -> new SafePrepender(player, (Varint21LengthFieldPrepender) prepender));
         replaceHandler(channel, "splitter", splitter -> new SafeSplitter(player, (Varint21FrameDecoder) splitter));
