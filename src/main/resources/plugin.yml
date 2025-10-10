@@ -1,0 +1,6 @@
+name: NoPacketBan
+version: 1.0.1
+main: io.github.lumine1909.nopacketban.NoPacketBan
+api-version: 1.21
+authors:
+  - Lumine1909
