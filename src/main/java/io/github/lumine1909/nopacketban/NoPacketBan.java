@@ -6,9 +6,18 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class NoPacketBan extends JavaPlugin {
 
+    private Metrics metrics;
+
     @Override
     public void onEnable() {
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
-        new Metrics(this, 27531);
+        metrics = new Metrics(this, 27531);
+    }
+
+    @Override
+    public void onDisable() {
+        if (metrics != null) {
+            metrics.shutdown();
+        }
     }
 }
