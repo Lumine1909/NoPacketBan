@@ -1,7 +1,6 @@
 package io.github.lumine1909.nopacketban.handler;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
@@ -9,6 +8,8 @@ import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.network.Varint21LengthFieldPrepender;
 import org.bukkit.entity.Player;
+
+import java.lang.reflect.InvocationTargetException;
 
 import static io.github.lumine1909.nopacketban.util.Reflection.messageToByteEncode;
 import static net.kyori.adventure.text.Component.join;
@@ -44,7 +45,11 @@ public class PrependChecker extends ChannelOutboundHandlerAdapter implements Sec
     }
 
     @Override
-    public void checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
-        messageToByteEncode.invoke(dummyPrepender, ctx, msg.retainedDuplicate(), ctx.alloc().ioBuffer());
+    public void checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) throws Throwable {
+        try {
+            messageToByteEncode.invoke(dummyPrepender, ctx, msg.retainedDuplicate(), ctx.alloc().ioBuffer());
+        } catch (InvocationTargetException e) {
+            throw e.getTargetException();
+        }
     }
 }

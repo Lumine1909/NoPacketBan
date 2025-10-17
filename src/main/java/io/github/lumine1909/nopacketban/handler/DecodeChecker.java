@@ -1,7 +1,6 @@
 package io.github.lumine1909.nopacketban.handler;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -10,7 +9,10 @@ import net.minecraft.network.PacketDecoder;
 import net.minecraft.network.PacketListener;
 import org.bukkit.entity.Player;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 
+import static io.github.lumine1909.nopacketban.util.Reflection.byteToMessageDecode;
 import static io.github.lumine1909.nopacketban.util.Reflection.decoderProtocolInfo;
 import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.text;
@@ -44,11 +46,11 @@ public class DecodeChecker<T extends PacketListener> extends ChannelInboundHandl
         }
     }
 
-    public void checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+    public void checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) throws Throwable {
         try {
-            dummyDecoder.channelRead(ctx, msg.retainedDuplicate());
-        } catch (Exception e) {
-            e.printStackTrace();
+            byteToMessageDecode.invoke(dummyDecoder, ctx, msg.retainedDuplicate(), new ArrayList<>());
+        } catch (InvocationTargetException e) {
+            throw e.getTargetException();
         }
     }
 }

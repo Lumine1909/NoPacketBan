@@ -9,7 +9,10 @@ import net.minecraft.network.BandwidthDebugMonitor;
 import net.minecraft.network.Varint21FrameDecoder;
 import org.bukkit.entity.Player;
 
-import static io.github.lumine1909.nopacketban.util.Reflection.messageToByteEncode;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+
+import static io.github.lumine1909.nopacketban.util.Reflection.byteToMessageDecode;
 import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.text;
 
@@ -17,6 +20,7 @@ public class SplitChecker extends ChannelInboundHandlerAdapter implements Securi
 
     static class DummyMonitor extends BandwidthDebugMonitor {
 
+        @SuppressWarnings("DataFlowIssue")
         public DummyMonitor() {
             super(null);
         }
@@ -57,11 +61,11 @@ public class SplitChecker extends ChannelInboundHandlerAdapter implements Securi
         }
     }
 
-    public void checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+    public void checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) throws Throwable {
         try {
-            dummySplitter.channelRead(ctx, msg.retainedDuplicate());
-        } catch (Exception e) {
-            e.printStackTrace();
+            byteToMessageDecode.invoke(dummySplitter, ctx, msg.retainedDuplicate(), new ArrayList<>());
+        } catch (InvocationTargetException e) {
+            throw e.getTargetException();
         }
     }
 }

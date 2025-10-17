@@ -1,6 +1,5 @@
 package io.github.lumine1909.nopacketban.handler;
 
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
@@ -11,11 +10,14 @@ import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
 import org.bukkit.entity.Player;
 
+import java.lang.reflect.InvocationTargetException;
+
 import static io.github.lumine1909.nopacketban.util.Reflection.encoderProtocolInfo;
 import static io.github.lumine1909.nopacketban.util.Reflection.messageToByteEncode;
 import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.text;
 
+@SuppressWarnings("rawtypes")
 public class EncodeChecker<T extends PacketListener> extends ChannelOutboundHandlerAdapter implements SecurityChecker<Packet> {
 
     private final Player player;
@@ -45,7 +47,11 @@ public class EncodeChecker<T extends PacketListener> extends ChannelOutboundHand
         }
     }
 
-    public void checkSecurity(ChannelHandlerContext ctx, Packet msg) throws Exception {
-        messageToByteEncode.invoke(dummyEncoder, ctx, msg, ctx.alloc().ioBuffer());
+    public void checkSecurity(ChannelHandlerContext ctx, Packet msg) throws Throwable {
+        try {
+            messageToByteEncode.invoke(dummyEncoder, ctx, msg, ctx.alloc().ioBuffer());
+        } catch (InvocationTargetException e) {
+            throw e.getTargetException();
+        }
     }
 }

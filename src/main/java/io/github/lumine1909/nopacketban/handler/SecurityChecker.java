@@ -4,5 +4,5 @@ import io.netty.channel.ChannelHandlerContext;
 
 public interface SecurityChecker<T> {
 
-    void checkSecurity(ChannelHandlerContext ctx, T msg) throws Exception;
+    void checkSecurity(ChannelHandlerContext ctx, T msg) throws Throwable;
 }
