@@ -1,5 +1,6 @@
 package io.github.lumine1909.nopacketban.handler;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
@@ -48,10 +49,13 @@ public class EncodeChecker<T extends PacketListener> extends ChannelOutboundHand
     }
 
     public void checkSecurity(ChannelHandlerContext ctx, Packet msg) throws Throwable {
+        ByteBuf buf = ctx.alloc().ioBuffer();
         try {
-            messageToByteEncode.invoke(dummyEncoder, ctx, msg, ctx.alloc().ioBuffer());
+            messageToByteEncode.invoke(dummyEncoder, ctx, msg, buf);
         } catch (InvocationTargetException e) {
             throw e.getTargetException();
+        } finally {
+            buf.release();
         }
     }
 }

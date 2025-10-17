@@ -47,10 +47,13 @@ public class DecodeChecker<T extends PacketListener> extends ChannelInboundHandl
     }
 
     public void checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) throws Throwable {
+        ByteBuf buf = msg.retainedDuplicate();
         try {
-            byteToMessageDecode.invoke(dummyDecoder, ctx, msg.retainedDuplicate(), new ArrayList<>());
+            byteToMessageDecode.invoke(dummyDecoder, ctx, buf, new ArrayList<>());
         } catch (InvocationTargetException e) {
             throw e.getTargetException();
+        } finally {
+            buf.release();
         }
     }
 }
