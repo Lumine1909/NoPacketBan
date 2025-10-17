@@ -4,15 +4,17 @@ plugins {
 }
 
 group = "io.github.lumine1909"
-version = "1.0.1"
+version = "1.1.0"
 
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.codemc.io/repository/maven-releases/")
     maven("https://repo.codemc.io/repository/maven-snapshots/")
+    maven("https://repo.viaversion.com")
 }
 
 dependencies {
     paperweight.paperDevBundle("1.21.8-R0.1-SNAPSHOT")
+    compileOnly("com.viaversion:viaversion-api:5.5.1")
 }
