@@ -1,15 +1,10 @@
 package io.github.lumine1909.nopacketban;
 
-import io.github.lumine1909.nopacketban.handler.SafeDecoder;
-import io.github.lumine1909.nopacketban.handler.SafeEncoder;
-import io.github.lumine1909.nopacketban.handler.SafePrepender;
-import io.github.lumine1909.nopacketban.handler.SafeSplitter;
+import io.github.lumine1909.nopacketban.handler.EncodeChecker;
+import io.github.lumine1909.nopacketban.handler.PrependChecker;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
-import net.minecraft.network.PacketDecoder;
 import net.minecraft.network.PacketEncoder;
-import net.minecraft.network.Varint21FrameDecoder;
-import net.minecraft.network.Varint21LengthFieldPrepender;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,17 +23,17 @@ public class PlayerListener implements Listener {
     @SuppressWarnings({"rawtypes", "unchecked"})
     private void injectPlayer(Player player) {
         Channel channel = ((CraftPlayer) player).getHandle().connection.connection.channel;
-        replaceHandler(channel, "encoder", encoder -> new SafeEncoder<>(player, (PacketEncoder) encoder));
-        replaceHandler(channel, "decoder", decoder -> new SafeDecoder<>(player, (PacketDecoder) decoder));
-        replaceHandler(channel, "prepender", prepender -> new SafePrepender(player, (Varint21LengthFieldPrepender) prepender));
-        replaceHandler(channel, "splitter", splitter -> new SafeSplitter(player, (Varint21FrameDecoder) splitter));
+        addChecker(channel, "encoder", encoder -> new EncodeChecker<>(player, (PacketEncoder) encoder));
+        //addChecker(channel, "decoder", decoder -> new DecodeChecker<>(player, (PacketDecoder) decoder));
+        addChecker(channel, "prepender", prepender -> new PrependChecker(player));
+        //addChecker(channel, "splitter", splitter -> new SplitChecker(player));
     }
 
-    private void replaceHandler(Channel channel, String id, Function<ChannelHandler, ChannelHandler> wrapper) {
+    private void addChecker(Channel channel, String id, Function<ChannelHandler, ChannelHandler> creator) {
         ChannelHandler handler = channel.pipeline().get(id);
         if (handler == null) {
             throw new RuntimeException("No handler found for id " + id);
         }
-        channel.pipeline().replace(id, id, wrapper.apply(handler));
+        channel.pipeline().addAfter(id, id + "_checker", creator.apply(handler));
     }
 }

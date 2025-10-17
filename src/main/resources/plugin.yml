@@ -1,6 +1,8 @@
 name: NoPacketBan
-version: 1.0.1
+version: 1.1.0-SNAPSHOT
 main: io.github.lumine1909.nopacketban.NoPacketBan
 api-version: 1.21
+softdepend:
+  - ViaVersion
 authors:
   - Lumine1909
