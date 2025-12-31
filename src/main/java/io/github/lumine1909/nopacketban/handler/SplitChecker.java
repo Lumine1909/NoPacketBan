@@ -1,16 +1,16 @@
 package io.github.lumine1909.nopacketban.handler;
 
+import io.github.lumine1909.nopacketban.util.DummyList;
+import io.github.lumine1909.nopacketban.util.DummyMonitor;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.minecraft.network.BandwidthDebugMonitor;
 import net.minecraft.network.Varint21FrameDecoder;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 
 import static io.github.lumine1909.nopacketban.util.Reflection.byteToMessageDecode;
 import static net.kyori.adventure.text.Component.join;
@@ -18,28 +18,12 @@ import static net.kyori.adventure.text.Component.text;
 
 public class SplitChecker extends ChannelInboundHandlerAdapter implements SecurityChecker<ByteBuf> {
 
-    static class DummyMonitor extends BandwidthDebugMonitor {
-
-        @SuppressWarnings("DataFlowIssue")
-        public DummyMonitor() {
-            super(null);
-        }
-
-        @Override
-        public void tick() {
-        }
-
-        @Override
-        public void onReceive(int amount) {
-        }
-    }
-
     private final Player player;
     private final Varint21FrameDecoder dummySplitter;
 
     public SplitChecker(Player player) {
         this.player = player;
-        this.dummySplitter = new Varint21FrameDecoder(new DummyMonitor());
+        this.dummySplitter = new Varint21FrameDecoder(DummyMonitor.INSTANCE);
     }
 
     @Override
@@ -62,13 +46,14 @@ public class SplitChecker extends ChannelInboundHandlerAdapter implements Securi
     }
 
     public void checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) throws Throwable {
-        ByteBuf buf = msg.retainedDuplicate();
+        int reader = msg.readerIndex(), writer = msg.writerIndex();
         try {
-            byteToMessageDecode.invoke(dummySplitter, ctx, buf, new ArrayList<>());
+            byteToMessageDecode.invoke(dummySplitter, ctx, msg, DummyList.INSTANCE);
         } catch (InvocationTargetException e) {
             throw e.getTargetException();
         } finally {
-            buf.release();
+            msg.readerIndex(reader);
+            msg.writerIndex(writer);
         }
     }
 }

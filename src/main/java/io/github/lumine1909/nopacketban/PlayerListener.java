@@ -3,7 +3,6 @@ package io.github.lumine1909.nopacketban;
 import io.github.lumine1909.nopacketban.handler.DecodeChecker;
 import io.github.lumine1909.nopacketban.handler.EncodeChecker;
 import io.github.lumine1909.nopacketban.handler.PrependChecker;
-import io.github.lumine1909.nopacketban.handler.SplitChecker;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import net.minecraft.network.PacketDecoder;

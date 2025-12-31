@@ -46,15 +46,16 @@ public class PrependChecker extends ChannelOutboundHandlerAdapter implements Sec
 
     @Override
     public void checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) throws Throwable {
-        ByteBuf buf = ctx.alloc().heapBuffer();
-        ByteBuf dup = msg.retainedDuplicate();
+        ByteBuf buf = ctx.alloc().buffer();
+        int reader = msg.readerIndex(), writer = msg.writerIndex();
         try {
-            messageToByteEncode.invoke(dummyPrepender, ctx, dup, buf);
+            messageToByteEncode.invoke(dummyPrepender, ctx, msg, buf);
         } catch (InvocationTargetException e) {
             throw e.getTargetException();
         } finally {
             buf.release();
-            dup.release();
+            msg.readerIndex(reader);
+            msg.writerIndex(writer);
         }
     }
 }
