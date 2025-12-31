@@ -11,8 +11,6 @@ import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
 import org.bukkit.entity.Player;
 
-import java.lang.reflect.InvocationTargetException;
-
 import static io.github.lumine1909.nopacketban.util.Reflection.encoderProtocolInfo;
 import static io.github.lumine1909.nopacketban.util.Reflection.messageToByteEncode;
 import static net.kyori.adventure.text.Component.join;
@@ -25,37 +23,40 @@ public class EncodeChecker<T extends PacketListener> extends ChannelOutboundHand
     private final PacketEncoder<T> dummyEncoder;
 
     public EncodeChecker(Player player, PacketEncoder<T> encoder) {
-        this.dummyEncoder = new PacketEncoder<>(encoderProtocolInfo.get(encoder));
+        this.dummyEncoder = new PacketEncoder<>(encoderProtocolInfo.getUnsafe(encoder));
         this.player = player;
     }
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        if (!(msg instanceof Packet)) {
+        if (!(msg instanceof Packet packet)) {
             super.write(ctx, msg, promise);
             return;
         }
-        try {
-            checkSecurity(ctx, (Packet) msg);
-            super.write(ctx, msg, promise);
-        } catch (Throwable t) {
-            player.sendMessage(join(JoinConfiguration.newlines(),
-                text("Failed to encode packet " + msg.getClass().getSimpleName() + " .", NamedTextColor.RED),
-                text("Please report to server admin if you believe this is in error.", NamedTextColor.RED),
-                text("Or consider you are being packet kicked.", NamedTextColor.RED),
-                text("Details: " + t.getMessage(), NamedTextColor.RED)
-            ));
+        Throwable t = checkSecurity(ctx, packet);
+        if (t == null || packet.hasLargePacketFallback()) {
+            super.write(ctx, packet, promise);
+            return;
         }
+        player.sendMessage(join(JoinConfiguration.newlines(),
+            text("Failed to encode packet " + packet.getClass().getSimpleName() + " .", NamedTextColor.RED),
+            text("Please report to server admin if you believe this is in error.", NamedTextColor.RED),
+            text("Or consider you are being packet kicked.", NamedTextColor.RED),
+            text("Details: " + t.getMessage(), NamedTextColor.RED)
+        ));
     }
 
-    public void checkSecurity(ChannelHandlerContext ctx, Packet msg) throws Throwable {
+    public Throwable checkSecurity(ChannelHandlerContext ctx, Packet packet) {
         ByteBuf buf = ctx.alloc().buffer();
         try {
-            messageToByteEncode.invoke(dummyEncoder, ctx, msg, buf);
-        } catch (InvocationTargetException e) {
-            throw e.getTargetException();
+            messageToByteEncode.invoke(dummyEncoder, ctx, packet, buf);
+        } catch (RuntimeException e) {
+            return e.getCause();
+        } catch (Throwable t) {
+            return t;
         } finally {
             buf.release();
         }
+        return null;
     }
 }

@@ -10,8 +10,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.network.Varint21FrameDecoder;
 import org.bukkit.entity.Player;
 
-import java.lang.reflect.InvocationTargetException;
-
 import static io.github.lumine1909.nopacketban.util.Reflection.byteToMessageDecode;
 import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.text;
@@ -32,28 +30,31 @@ public class SplitChecker extends ChannelInboundHandlerAdapter implements Securi
             super.channelRead(ctx, msg);
             return;
         }
-        try {
-            checkSecurity(ctx, (ByteBuf) msg);
+        Throwable t = checkSecurity(ctx, (ByteBuf) msg);
+        if (t == null) {
             super.channelRead(ctx, msg);
-        } catch (Throwable t) {
-            player.sendMessage(join(JoinConfiguration.newlines(),
-                text("Failed to split message " + msg.getClass().getSimpleName() + " .", NamedTextColor.RED),
-                text("Please report to server admin if you believe this is in error.", NamedTextColor.RED),
-                text("Or consider you are sending a huge packet.", NamedTextColor.RED),
-                text("Details: " + t.getMessage(), NamedTextColor.RED)
-            ));
+            return;
         }
+        player.sendMessage(join(JoinConfiguration.newlines(),
+            text("Failed to split message " + msg.getClass().getSimpleName() + " .", NamedTextColor.RED),
+            text("Please report to server admin if you believe this is in error.", NamedTextColor.RED),
+            text("Or consider you are sending a huge packet.", NamedTextColor.RED),
+            text("Details: " + t.getMessage(), NamedTextColor.RED)
+        ));
     }
 
-    public void checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) throws Throwable {
+    public Throwable checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) {
         int reader = msg.readerIndex(), writer = msg.writerIndex();
         try {
             byteToMessageDecode.invoke(dummySplitter, ctx, msg, DummyList.INSTANCE);
-        } catch (InvocationTargetException e) {
-            throw e.getTargetException();
+        } catch (RuntimeException e) {
+            return e.getCause();
+        } catch (Throwable t) {
+            return t;
         } finally {
             msg.readerIndex(reader);
             msg.writerIndex(writer);
         }
+        return null;
     }
 }

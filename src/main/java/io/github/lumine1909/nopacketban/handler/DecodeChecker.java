@@ -10,8 +10,6 @@ import net.minecraft.network.PacketDecoder;
 import net.minecraft.network.PacketListener;
 import org.bukkit.entity.Player;
 
-import java.lang.reflect.InvocationTargetException;
-
 import static io.github.lumine1909.nopacketban.util.Reflection.byteToMessageDecode;
 import static io.github.lumine1909.nopacketban.util.Reflection.decoderProtocolInfo;
 import static net.kyori.adventure.text.Component.join;
@@ -23,38 +21,41 @@ public class DecodeChecker<T extends PacketListener> extends ChannelInboundHandl
     private final PacketDecoder<T> dummyDecoder;
 
     public DecodeChecker(Player player, PacketDecoder<T> decoder) {
-        this.dummyDecoder = new PacketDecoder<>(decoderProtocolInfo.get(decoder));
+        this.dummyDecoder = new PacketDecoder<>(decoderProtocolInfo.getUnsafe(decoder));
         this.player = player;
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (!(msg instanceof ByteBuf)) {
+        if (!(msg instanceof ByteBuf buf)) {
             super.channelRead(ctx, msg);
             return;
         }
-        try {
-            checkSecurity(ctx, (ByteBuf) msg);
-            ctx.fireChannelRead(msg);
-        } catch (Throwable t) {
-            player.sendMessage(join(JoinConfiguration.newlines(),
-                text("Failed to decode message " + msg.getClass().getSimpleName() + " .", NamedTextColor.RED),
-                text("Please report to server admin if you believe this is in error.", NamedTextColor.RED),
-                text("Or consider you are sending corrupted packet.", NamedTextColor.RED),
-                text("Details: " + t.getMessage(), NamedTextColor.RED)
-            ));
+        Throwable t = checkSecurity(ctx, buf);
+        if (t == null) {
+            super.channelRead(ctx, buf);
+            return;
         }
+        player.sendMessage(join(JoinConfiguration.newlines(),
+            text("Failed to decode message " + buf.getClass().getSimpleName() + " .", NamedTextColor.RED),
+            text("Please report to server admin if you believe this is in error.", NamedTextColor.RED),
+            text("Or consider you are sending corrupted packet.", NamedTextColor.RED),
+            text("Details: " + t.getMessage(), NamedTextColor.RED)
+        ));
     }
 
-    public void checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) throws Throwable {
-        int reader = msg.readerIndex(), writer = msg.writerIndex();
+    public Throwable checkSecurity(ChannelHandlerContext ctx, ByteBuf buf) {
+        int reader = buf.readerIndex(), writer = buf.writerIndex();
         try {
-            byteToMessageDecode.invoke(dummyDecoder, ctx, msg, DummyList.INSTANCE);
-        } catch (InvocationTargetException e) {
-            throw e.getTargetException();
+            byteToMessageDecode.invoke(dummyDecoder, ctx, buf, DummyList.INSTANCE);
+        } catch (RuntimeException e) {
+            return e.getCause();
+        } catch (Throwable t) {
+            return t;
         } finally {
-            msg.readerIndex(reader);
-            msg.writerIndex(writer);
+            buf.readerIndex(reader);
+            buf.writerIndex(writer);
         }
+        return null;
     }
 }

@@ -9,8 +9,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.network.Varint21LengthFieldPrepender;
 import org.bukkit.entity.Player;
 
-import java.lang.reflect.InvocationTargetException;
-
 import static io.github.lumine1909.nopacketban.util.Reflection.messageToByteEncode;
 import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.text;
@@ -27,35 +25,38 @@ public class PrependChecker extends ChannelOutboundHandlerAdapter implements Sec
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        if (!(msg instanceof ByteBuf)) {
+        if (!(msg instanceof ByteBuf buf)) {
             super.write(ctx, msg, promise);
             return;
         }
-        try {
-            checkSecurity(ctx, (ByteBuf) msg);
-            super.write(ctx, msg, promise);
-        } catch (Throwable t) {
-            player.sendMessage(join(JoinConfiguration.newlines(),
-                text("Failed to prepend " + msg.getClass().getSimpleName() + " .", NamedTextColor.RED),
-                text("Please report to server admin if you believe this is in error.", NamedTextColor.RED),
-                text("Or consider you are being packet kicked.", NamedTextColor.RED),
-                text("Details: " + t.getMessage(), NamedTextColor.RED)
-            ));
+        Throwable t = checkSecurity(ctx, buf);
+        if (t == null) {
+            super.write(ctx, buf, promise);
+            return;
         }
+        player.sendMessage(join(JoinConfiguration.newlines(),
+            text("Failed to prepend " + buf.getClass().getSimpleName() + " .", NamedTextColor.RED),
+            text("Please report to server admin if you believe this is in error.", NamedTextColor.RED),
+            text("Or consider you are being packet kicked.", NamedTextColor.RED),
+            text("Details: " + t.getMessage(), NamedTextColor.RED)
+        ));
     }
 
     @Override
-    public void checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) throws Throwable {
-        ByteBuf buf = ctx.alloc().buffer();
-        int reader = msg.readerIndex(), writer = msg.writerIndex();
+    public Throwable checkSecurity(ChannelHandlerContext ctx, ByteBuf buf) {
+        ByteBuf writeBuf = ctx.alloc().buffer();
+        int reader = buf.readerIndex(), writer = buf.writerIndex();
         try {
-            messageToByteEncode.invoke(dummyPrepender, ctx, msg, buf);
-        } catch (InvocationTargetException e) {
-            throw e.getTargetException();
+            messageToByteEncode.invoke(dummyPrepender, ctx, buf, writeBuf);
+        } catch (RuntimeException e) {
+            return e.getCause();
+        } catch (Throwable t) {
+            return t;
         } finally {
-            buf.release();
-            msg.readerIndex(reader);
-            msg.writerIndex(writer);
+            writeBuf.release();
+            buf.readerIndex(reader);
+            buf.writerIndex(writer);
         }
+        return null;
     }
 }
