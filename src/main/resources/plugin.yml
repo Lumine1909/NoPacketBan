@@ -1,7 +1,8 @@
 name: NoPacketBan
 version: 1.2.0
 main: io.github.lumine1909.nopacketban.NoPacketBan
-api-version: 1.21
+api-version: 1.20.5
+folia-supported: true
 softdepend:
   - ViaVersion
 authors:
