@@ -49,10 +49,8 @@ public class PrependChecker extends ChannelOutboundHandlerAdapter implements Sec
         int reader = buf.readerIndex(), writer = buf.writerIndex();
         try {
             messageToByteEncode.invokeFast(dummyPrepender, ctx, buf, writeBuf);
-        } catch (RuntimeException e) {
-            return e.getCause();
         } catch (Throwable t) {
-            return t;
+            return SecurityChecker.unwrap(t);
         } finally {
             writeBuf.release();
             buf.readerIndex(reader);

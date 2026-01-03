@@ -49,10 +49,8 @@ public class DecodeChecker<T extends PacketListener> extends ChannelInboundHandl
         int reader = buf.readerIndex(), writer = buf.writerIndex();
         try {
             byteToMessageDecode.invokeFast(dummyDecoder, ctx, buf, DummyList.INSTANCE);
-        } catch (RuntimeException e) {
-            return e.getCause();
         } catch (Throwable t) {
-            return t;
+            return SecurityChecker.unwrap(t);
         } finally {
             buf.readerIndex(reader);
             buf.writerIndex(writer);

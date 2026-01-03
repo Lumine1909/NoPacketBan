@@ -50,10 +50,8 @@ public class EncodeChecker<T extends PacketListener> extends ChannelOutboundHand
         ByteBuf buf = ctx.alloc().heapBuffer();
         try {
             messageToByteEncode.invokeFast(dummyEncoder, ctx, packet, buf);
-        } catch (RuntimeException e) {
-            return e.getCause();
         } catch (Throwable t) {
-            return t;
+            return SecurityChecker.unwrap(t);
         } finally {
             buf.release();
         }
