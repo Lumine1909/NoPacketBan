@@ -26,15 +26,16 @@ public class SplitChecker extends ChannelInboundHandlerAdapter implements Securi
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (!(msg instanceof ByteBuf)) {
+        if (!(msg instanceof ByteBuf buf)) {
             super.channelRead(ctx, msg);
             return;
         }
-        Throwable t = checkSecurity(ctx, (ByteBuf) msg);
+        Throwable t = checkSecurity(ctx, buf);
         if (t == null) {
-            super.channelRead(ctx, msg);
+            super.channelRead(ctx, buf);
             return;
         }
+        buf.release();
         player.sendMessage(join(JoinConfiguration.newlines(),
             text("Failed to split message " + msg.getClass().getSimpleName() + " .", NamedTextColor.RED),
             text("Please report to server admin if you believe this is in error.", NamedTextColor.RED),
@@ -46,7 +47,7 @@ public class SplitChecker extends ChannelInboundHandlerAdapter implements Securi
     public Throwable checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) {
         int reader = msg.readerIndex(), writer = msg.writerIndex();
         try {
-            byteToMessageDecode.invoke(dummySplitter, ctx, msg, DummyList.INSTANCE);
+            byteToMessageDecode.invokeFast(dummySplitter, ctx, msg, DummyList.INSTANCE);
         } catch (RuntimeException e) {
             return e.getCause();
         } catch (Throwable t) {

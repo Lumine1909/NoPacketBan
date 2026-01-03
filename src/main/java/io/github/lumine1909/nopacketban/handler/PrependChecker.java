@@ -34,6 +34,7 @@ public class PrependChecker extends ChannelOutboundHandlerAdapter implements Sec
             super.write(ctx, buf, promise);
             return;
         }
+        buf.release();
         player.sendMessage(join(JoinConfiguration.newlines(),
             text("Failed to prepend " + buf.getClass().getSimpleName() + " .", NamedTextColor.RED),
             text("Please report to server admin if you believe this is in error.", NamedTextColor.RED),
@@ -44,10 +45,10 @@ public class PrependChecker extends ChannelOutboundHandlerAdapter implements Sec
 
     @Override
     public Throwable checkSecurity(ChannelHandlerContext ctx, ByteBuf buf) {
-        ByteBuf writeBuf = ctx.alloc().buffer();
+        ByteBuf writeBuf = ctx.alloc().heapBuffer();
         int reader = buf.readerIndex(), writer = buf.writerIndex();
         try {
-            messageToByteEncode.invoke(dummyPrepender, ctx, buf, writeBuf);
+            messageToByteEncode.invokeFast(dummyPrepender, ctx, buf, writeBuf);
         } catch (RuntimeException e) {
             return e.getCause();
         } catch (Throwable t) {

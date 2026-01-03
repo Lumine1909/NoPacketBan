@@ -47,9 +47,9 @@ public class EncodeChecker<T extends PacketListener> extends ChannelOutboundHand
     }
 
     public Throwable checkSecurity(ChannelHandlerContext ctx, Packet packet) {
-        ByteBuf buf = ctx.alloc().buffer();
+        ByteBuf buf = ctx.alloc().heapBuffer();
         try {
-            messageToByteEncode.invoke(dummyEncoder, ctx, packet, buf);
+            messageToByteEncode.invokeFast(dummyEncoder, ctx, packet, buf);
         } catch (RuntimeException e) {
             return e.getCause();
         } catch (Throwable t) {

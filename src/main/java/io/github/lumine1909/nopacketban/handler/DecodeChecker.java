@@ -36,6 +36,7 @@ public class DecodeChecker<T extends PacketListener> extends ChannelInboundHandl
             super.channelRead(ctx, buf);
             return;
         }
+        buf.release();
         player.sendMessage(join(JoinConfiguration.newlines(),
             text("Failed to decode message " + buf.getClass().getSimpleName() + " .", NamedTextColor.RED),
             text("Please report to server admin if you believe this is in error.", NamedTextColor.RED),
@@ -47,7 +48,7 @@ public class DecodeChecker<T extends PacketListener> extends ChannelInboundHandl
     public Throwable checkSecurity(ChannelHandlerContext ctx, ByteBuf buf) {
         int reader = buf.readerIndex(), writer = buf.writerIndex();
         try {
-            byteToMessageDecode.invoke(dummyDecoder, ctx, buf, DummyList.INSTANCE);
+            byteToMessageDecode.invokeFast(dummyDecoder, ctx, buf, DummyList.INSTANCE);
         } catch (RuntimeException e) {
             return e.getCause();
         } catch (Throwable t) {

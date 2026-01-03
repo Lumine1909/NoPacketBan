@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.lumine1909"
-version = "1.3.0"
+version = "1.3.1"
 
 repositories {
     mavenCentral()
@@ -17,7 +17,7 @@ repositories {
 
 dependencies {
     paperweight.paperDevBundle("1.21.8-R0.1-SNAPSHOT")
-    implementation("io.github.lumine1909:reflexion:1.0.4")
+    implementation("io.github.lumine1909:reflexion:2.0.0")
     compileOnly("com.viaversion:viaversion-api:5.5.1")
 }
 
