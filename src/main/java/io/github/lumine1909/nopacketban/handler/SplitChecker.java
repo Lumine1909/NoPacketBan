@@ -47,7 +47,7 @@ public class SplitChecker extends ChannelInboundHandlerAdapter implements Securi
     public Throwable checkSecurity(ChannelHandlerContext ctx, ByteBuf msg) {
         int reader = msg.readerIndex(), writer = msg.writerIndex();
         try {
-            byteToMessageDecode.invokeFast(dummySplitter, ctx, msg, DummyList.INSTANCE);
+            byteToMessageDecode.invoke(dummySplitter, ctx, msg, DummyList.INSTANCE);
         } catch (Throwable t) {
             return SecurityChecker.unwrap(t);
         } finally {
