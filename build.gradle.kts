@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.lumine1909"
-version = "1.3.2"
+version = "1.4.0"
 
 repositories {
     mavenCentral()
@@ -17,8 +17,14 @@ repositories {
 
 dependencies {
     paperweight.paperDevBundle("1.21.8-R0.1-SNAPSHOT")
-    implementation("io.github.lumine1909:reflexion:2.1.0")
+    implementation("io.github.lumine1909:reflexion:3.0.0")
     compileOnly("com.viaversion:viaversion-api:5.5.1")
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 tasks.shadowJar {

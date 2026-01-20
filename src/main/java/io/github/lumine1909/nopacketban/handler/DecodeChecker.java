@@ -21,7 +21,7 @@ public class DecodeChecker<T extends PacketListener> extends ChannelInboundHandl
     private final PacketDecoder<T> dummyDecoder;
 
     public DecodeChecker(Player player, PacketDecoder<T> decoder) {
-        this.dummyDecoder = new PacketDecoder<>(decoderProtocolInfo.getUnsafe(decoder));
+        this.dummyDecoder = new PacketDecoder<>(decoderProtocolInfo.getUntyped(decoder));
         this.player = player;
     }
 

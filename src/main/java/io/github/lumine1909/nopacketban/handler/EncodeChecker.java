@@ -11,6 +11,7 @@ import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
 import org.bukkit.entity.Player;
 
+import static io.github.lumine1909.nopacketban.NoPacketBan.*;
 import static io.github.lumine1909.nopacketban.util.Reflection.encoderProtocolInfo;
 import static io.github.lumine1909.nopacketban.util.Reflection.messageToByteEncode;
 import static net.kyori.adventure.text.Component.join;
@@ -23,7 +24,7 @@ public class EncodeChecker<T extends PacketListener> extends ChannelOutboundHand
     private final PacketEncoder<T> dummyEncoder;
 
     public EncodeChecker(Player player, PacketEncoder<T> encoder) {
-        this.dummyEncoder = new PacketEncoder<>(encoderProtocolInfo.getUnsafe(encoder));
+        this.dummyEncoder = new PacketEncoder<>(encoderProtocolInfo.getUntyped(encoder));
         this.player = player;
     }
 
@@ -50,11 +51,46 @@ public class EncodeChecker<T extends PacketListener> extends ChannelOutboundHand
         ByteBuf buf = ctx.alloc().heapBuffer();
         try {
             messageToByteEncode.invoke(dummyEncoder, ctx, packet, buf);
+            if (!hasVia) {
+                return null;
+            }
+            int packetLength = buf.readableBytes();
+            if (packetLength > (MAX_PACKET_SIZE)) {
+                return new StacklessPacketOversizeException(packet, packetLength, MAX_PACKET_SIZE);
+            }
+            if (packetLength > MAX_NORMAL_PACKET_SIZE && !packet.hasLargePacketFallback()) {
+                return new StacklessPacketOversizeException(packet, packetLength, MAX_NORMAL_PACKET_SIZE);
+            }
         } catch (Throwable t) {
             return SecurityChecker.unwrap(t);
         } finally {
             buf.release();
         }
         return null;
+    }
+
+    private static class StacklessPacketOversizeException extends RuntimeException {
+
+        private static final StackTraceElement[] DUMMY_STACK_TRACE = new StackTraceElement[0];
+
+        private static final String NOTICE = """
+            PacketTooLarge - %s is %s. Max is %s.
+            This is not the vanilla limit, but because ViaVersion is installed on the server, the server sets %s as a reserve size to prevent client-side DecoderExceptions caused by unexpected size inflation.
+            If you believe the preserved size is too large, please report to the server admin.
+            """;
+
+        StacklessPacketOversizeException(Packet<?> packet, int packetLength, int maxLength) {
+            super(NOTICE.formatted(packet.getClass().getSimpleName(), packetLength, maxLength, PRESERVED_PACKET_SIZE));
+        }
+
+        @Override
+        public Throwable fillInStackTrace() {
+            return this;
+        }
+
+        @Override
+        public StackTraceElement[] getStackTrace() {
+            return DUMMY_STACK_TRACE;
+        }
     }
 }

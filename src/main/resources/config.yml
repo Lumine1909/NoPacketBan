@@ -1,0 +1,21 @@
+# The amount of packet size (in bytes) reserved as a safety margin when ViaVersion is installed.
+#
+# Due to protocol and NBT encoding differences between Minecraft versions, packets that are valid
+# on the server side may grow in size after ViaVersion rewrites them for older clients.
+# If the rewritten packet exceeds the client’s maximum allowed size, the client will disconnect
+# with a DecoderException.
+#
+# This value reduces the effective maximum packet size on the server to leave headroom for
+# unexpected size inflation caused by cross-version translation.
+#
+# NOTE:
+# - This is NOT a vanilla limit. It is an additional safety buffer.
+# - This cannot guarantee 100% prevention of client disconnects, but significantly reduces them.
+# - The value is only applied when ViaVersion is present.
+#
+# Recommended values:
+#   262144 (256 KB) – safe default for most servers
+#   524288 (512 KB) – safer for NBT-heavy server or older client versions
+#   0               – disable preserved size (vanilla behavior, not recommended with ViaVersion)
+#
+preserved-packet-size: 262144
