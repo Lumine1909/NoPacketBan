@@ -16,6 +16,6 @@
 # Recommended values:
 #   262144 (256 KB) – safe default for most servers
 #   524288 (512 KB) – safer for NBT-heavy server or older client versions
-#   0               – disable preserved size (vanilla behavior, not recommended with ViaVersion)
+#   0               – disable reserved size (vanilla behavior, not recommended with ViaVersion)
 #
-preserved-packet-size: 262144
+reserved-packet-size: 262144

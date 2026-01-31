@@ -7,7 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class NoPacketBan extends JavaPlugin {
 
-    public static int PRESERVED_PACKET_SIZE;
+    public static int RESERVED_PACKET_SIZE;
     public static int MAX_NORMAL_PACKET_SIZE = 2097151;
     public static int MAX_PACKET_SIZE = 8388608;
     public static boolean hasVia = true;
@@ -19,15 +19,16 @@ public class NoPacketBan extends JavaPlugin {
         saveDefaultConfig();
         Bukkit.getPluginManager().registerEvents(new PlayerListener(), this);
         metrics = new Metrics(this, 27531);
-        PRESERVED_PACKET_SIZE = getConfig().getInt("preserved-packet-size", 0);
+        // Sorry for misusing words :(
+        RESERVED_PACKET_SIZE = getConfig().getInt("reserved-packet-size", getConfig().getInt("preserved-packet-size", 262144));
         if (Bukkit.getPluginManager().getPlugin("ViaVersion") == null) {
-            PRESERVED_PACKET_SIZE = 0;
+            RESERVED_PACKET_SIZE = 0;
             hasVia = false;
         } else {
             hasVia = true;
         }
-        MAX_NORMAL_PACKET_SIZE = 2097151 - PRESERVED_PACKET_SIZE;
-        MAX_PACKET_SIZE = 8388608 - PRESERVED_PACKET_SIZE;
+        MAX_NORMAL_PACKET_SIZE = 2097151 - RESERVED_PACKET_SIZE;
+        MAX_PACKET_SIZE = 8388608 - RESERVED_PACKET_SIZE;
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             PlayerListener.injectPlayer(player);

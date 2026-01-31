@@ -17,7 +17,7 @@ repositories {
 
 dependencies {
     paperweight.paperDevBundle("1.21.8-R0.1-SNAPSHOT")
-    implementation("io.github.lumine1909:reflexion:3.0.0")
+    implementation("io.github.lumine1909:reflexion:3.1.0")
     compileOnly("com.viaversion:viaversion-api:5.5.1")
 }
 

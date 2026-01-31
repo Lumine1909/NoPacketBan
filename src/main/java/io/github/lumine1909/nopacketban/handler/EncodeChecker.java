@@ -80,7 +80,7 @@ public class EncodeChecker<T extends PacketListener> extends ChannelOutboundHand
             """;
 
         StacklessPacketOversizeException(Packet<?> packet, int packetLength, int maxLength) {
-            super(NOTICE.formatted(packet.getClass().getSimpleName(), packetLength, maxLength, PRESERVED_PACKET_SIZE));
+            super(NOTICE.formatted(packet.getClass().getSimpleName(), packetLength, maxLength, RESERVED_PACKET_SIZE));
         }
 
         @Override
