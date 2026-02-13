@@ -25,7 +25,7 @@ public class PrependChecker extends ChannelOutboundHandlerAdapter implements Sec
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        if (!(msg instanceof ByteBuf buf)) {
+        if (!(msg instanceof ByteBuf buf) || !buf.isReadable()) {
             super.write(ctx, msg, promise);
             return;
         }

@@ -26,7 +26,7 @@ public class SplitChecker extends ChannelInboundHandlerAdapter implements Securi
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (!(msg instanceof ByteBuf buf)) {
+        if (!(msg instanceof ByteBuf buf) || !buf.isReadable()) {
             super.channelRead(ctx, msg);
             return;
         }
