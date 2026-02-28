@@ -19,3 +19,6 @@
 #   0               – disable reserved size (vanilla behavior, not recommended with ViaVersion)
 #
 reserved-packet-size: 262144
+
+# Log exceptions during sending packet so you can know what is happened with details.
+log-packet-exceptions: false

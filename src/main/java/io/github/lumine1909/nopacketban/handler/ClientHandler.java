@@ -1,9 +1,12 @@
 package io.github.lumine1909.nopacketban.handler;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.*;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 
-import static io.github.lumine1909.nopacketban.NoPacketBan.*;
+import static io.github.lumine1909.nopacketban.NoPacketBan.MAX_PACKET_SIZE;
+import static io.github.lumine1909.nopacketban.NoPacketBan.RESERVED_PACKET_SIZE;
 
 public class ClientHandler extends ChannelDuplexHandler {
 

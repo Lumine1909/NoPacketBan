@@ -7,7 +7,6 @@ import io.netty.channel.ChannelPipeline;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
-
 public class Injector {
 
     public static void injectPlayer(Player player) {
