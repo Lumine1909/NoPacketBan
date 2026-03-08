@@ -5,6 +5,8 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.minecraft.network.Connection;
+import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.PacketEncoder;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
@@ -33,6 +35,11 @@ public class ServerHandler extends ChannelDuplexHandler {
         }
         if (LOG_PACKET_EXCEPTIONS) {
             plugin.getSLF4JLogger().warn("Packet exception occurred: ", exception);
+        }
+        Connection connection = (Connection) ctx.channel().pipeline().get("packet_handler");
+        if (connection == null || connection.getPacketListener() == null || connection.getPacketListener().protocol() != ConnectionProtocol.PLAY) {
+            ctx.fireExceptionCaught(exception);
+            return;
         }
         channel.writeAndFlush(new ClientboundSystemChatPacket(join(JoinConfiguration.newlines(),
             text("An error occurred on sending packet.", NamedTextColor.RED),
